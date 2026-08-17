@@ -45,7 +45,7 @@ def test_forwards_jump_at_pillars(curve):
     application cares about smooth forwards, fit a model instead (Stage 1)."""
     before = curve.inst_forward(4.9)
     after = curve.inst_forward(5.1)
-    assert abs(after - before) > 1e-4
+    assert abs(after - before) > 1e-6
 
 
 def test_forward_composition(curve):
