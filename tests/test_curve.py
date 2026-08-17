@@ -6,7 +6,6 @@ from curve import DiscountCurve
 TIMES = np.array([0.5, 1.0, 2.0, 5.0, 10.0, 30.0])
 ZEROS = np.array([0.019, 0.020, 0.022, 0.024, 0.026, 0.027])
 
-
 @pytest.fixture
 def curve():
     return DiscountCurve.from_zero_rates(TIMES, ZEROS)
@@ -46,7 +45,7 @@ def test_forwards_jump_at_pillars(curve):
     application cares about smooth forwards, fit a model instead (Stage 1)."""
     before = curve.inst_forward(4.9)
     after = curve.inst_forward(5.1)
-    assert abs(after - before) > 1e-5
+    assert abs(after - before) > 1e-4
 
 
 def test_forward_composition(curve):
