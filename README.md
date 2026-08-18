@@ -1,6 +1,7 @@
 # euro-curve
 
-A toy euro yield curve, built twice, from free data.
+Euro yield curve, built using a parametric model and boot strapped from
+tradeable instruments, from free data.
 
 **Stage 1** — fit a Nelson–Siegel–Svensson curve to the ECB's published AAA euro area
 government bond yields, then check the fitted parameters against the ones the ECB
