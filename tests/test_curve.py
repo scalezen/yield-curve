@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from curve import DiscountCurve
+from eurocurve.curve import DiscountCurve
 
 TIMES = np.array([0.5, 1.0, 2.0, 5.0, 10.0, 30.0])
 ZEROS = np.array([0.019, 0.020, 0.022, 0.024, 0.026, 0.027])
