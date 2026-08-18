@@ -101,12 +101,16 @@ def _leap(y: int) -> bool:
 def _roll(d: dt.date) -> dt.date:
     """Modified following: roll forward off a weekend, but never into a new month."""
     orig_month = d.month
-    while d.weekday() in _WEEKEND:
-        d += dt.timedelta(days=1)
-    if d.month != orig_month:  # rolled past month end -> go backwards instead
-        while d.weekday() in _WEEKEND:
-            d -= dt.timedelta(days=1)
-    return d
+    fwd = d
+    while fwd.weekday() in _WEEKEND:
+        fwd += dt.timedelta(days=1)
+    if fwd.month == orig_month:
+        return fwd
+    # rolled past month end -> go backwards from the original date instead
+    back = d
+    while back.weekday() in _WEEKEND:
+        back -= dt.timedelta(days=1)
+    return back
 
 
 def annual_schedule(start: dt.date, maturity_tenor: str) -> list[dt.date]:

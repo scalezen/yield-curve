@@ -10,3 +10,4 @@ dependencies:
   - requests>=2.31
   - pytest>=7.4
   - jupyterlab>=4.0
+
