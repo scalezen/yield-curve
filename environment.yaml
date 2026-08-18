@@ -1,0 +1,12 @@
+name: yield_curve_env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11          # You can change this to 3.10 or 3.12 if needed
+  - numpy>=1.24
+  - pandas>=2.0
+  - scipy>=1.10
+  - matplotlib>=3.7
+  - requests>=2.31
+  - pytest>=7.4
+  - jupyterlab>=4.0
