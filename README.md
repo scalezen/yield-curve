@@ -3,34 +3,32 @@
 A toy euro yield curve, built twice, from free data.
 
 **Stage 1** — fit a Nelson–Siegel–Svensson curve to the ECB's published AAA euro area
-government bond yields, then check your fitted parameters against the ones the ECB
-publishes for the same day. This is the rare case where you get to mark your own homework
-against the official answer.
+government bond yields, then check the fitted parameters against the ones the ECB
+publishes for the same day.
 
-**Stage 2** — bootstrap a €STR OIS discount curve from swap par rates, the way a rates desk
-actually builds a discounting curve. No model, no fitting: pure sequential arithmetic.
+**Stage 2** — bootstrap a €STR OIS discount curve from swap par rates. No model,
+no fitting: pure sequential arithmetic.
 
 Both stages produce the same three objects — discount factors, zero rates, instantaneous
-forwards — from completely different starting points. Seeing that is the point of the project.
+forwards — from completely different starting points.
 
 ## Quick start
 
 ```bash
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+conda env create -f environment.yaml -n yield_curve
 pytest -q                       # 20-odd tests, all offline
 python -m scripts.run_stage1    # pulls ECB data, fits NSS, saves a plot
 python -m scripts.run_stage2    # bootstraps the OIS curve, saves a plot
 jupyter lab notebooks/          # the actual teaching material
 ```
 
-Read the notebooks in order. The scripts are just the notebooks' conclusions in runnable form.
+Notebooks are in order. The scripts are just the notebooks' conclusions in runnable form.
 
 ## Layout
 
 ```
 eurocurve/
-  daycount.py    year fractions, schedule generation
+  daycount.py    year fractions, roll, schedule generation
   ecb.py         ECB Data Portal client (no API key needed)
   nss.py         Nelson-Siegel-Svensson: spot, forward, discount, fitting
   curve.py       DiscountCurve — interpolation, zero rates, forwards
@@ -68,13 +66,6 @@ everything downstream still works. The O/N pillar is pulled live from €STR so 
 point is real.
 
 Values in ECB `YC` are **percent** and **continuously compounded**. Getting either of those
-wrong is the single most common bug in this kind of code, so `ecb.py` converts to decimals at
+wrong leads to catastrophic bugs, so `ecb.py` converts to decimals at
 the boundary and everything inside the package is in decimals.
 
-## What you should be able to do afterwards
-
-- Move between discount factors, zero rates, par yields and instantaneous forwards without
-  looking anything up, and say which compounding convention you're in at every step.
-- Explain why a bootstrapped curve exactly reprices its inputs and a fitted curve does not,
-  and when you want each.
-- Point at a hump in a forward curve and say which NSS parameter put it there.
