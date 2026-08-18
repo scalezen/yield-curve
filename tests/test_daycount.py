@@ -21,7 +21,7 @@ def test_act360_vs_act365():
 
 
 def test_thirty_360_ignores_month_length():
-    assert year_fraction(dt.date(2026, 1, 31), dt.date(2026, 2, 28), "30/360") == pytest.approx(0.0)
+    assert year_fraction(dt.date(2026, 1, 31), dt.date(2026, 2, 28), "30/360") == pytest.approx(28/360)
     assert year_fraction(dt.date(2026, 1, 15), dt.date(2026, 7, 15), "30/360") == pytest.approx(0.5)
 
 
@@ -82,3 +82,5 @@ def test_accruals_sum_to_total_period():
     sched = annual_schedule(s, "10Y")
     a = accruals(s, sched)
     assert sum(a) == pytest.approx(year_fraction(s, sched[-1], "ACT/360"))
+
+
