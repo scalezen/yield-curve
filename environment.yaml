@@ -10,4 +10,5 @@ dependencies:
   - requests>=2.31
   - pytest>=7.4
   - jupyterlab>=4.0
+  - ipykernel>=6.25
 
