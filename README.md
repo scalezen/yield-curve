@@ -7,8 +7,7 @@ tradeable instruments, from free data.
 government bond yields, then check the fitted parameters against the ones the ECB
 publishes for the same day.
 
-**Stage 2** — bootstrap a €STR OIS discount curve from swap par rates. No model,
-no fitting: pure sequential arithmetic.
+**Stage 2** — bootstrap a €STR OIS discount curve from swap par rates. No model or fitting: pure sequential arithmetic.
 
 Both stages produce the same three objects — discount factors, zero rates, instantaneous
 forwards — from completely different starting points.
@@ -46,8 +45,8 @@ tests/
 
 ## About the data
 
-**ECB Data Portal** (`data-api.ecb.europa.eu`) is a public SDMX API. No key, no registration,
-no rate limit worth worrying about. Two datasets matter here:
+**ECB Data Portal** (`data-api.ecb.europa.eu`) is a public SDMX API. No key, no registration and
+no rate limit. Two datasets matter here:
 
 - `YC` — the euro area yield curves. The ECB fits Svensson daily to AAA-rated euro area
   government bonds and publishes both the *outputs* (spot rates `SR_1Y`, par yields `PY_1Y`,
@@ -59,14 +58,13 @@ Series keys look like `YC.B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y`. Decoded:
 (`G_N_C` is all issuers), `SV_C_YM`=Svensson, continuously compounded, fitted by yield-error
 minimisation, `SR_10Y`=10-year spot rate.
 
-**OIS quotes** are the one thing that is genuinely not free. Live EUR OIS par rates live behind
+**OIS quotes** are not free. Live EUR OIS par rates are available from
 Bloomberg/Refinitiv/ICAP. So `data/eur_ois_sample.csv` is a static, plausible EUR OIS curve
 bundled with the repo — it makes Stage 2 fully reproducible offline, and the bootstrap
-mechanics are identical whatever numbers you feed it. Replace that file with real quotes and
-everything downstream still works. The O/N pillar is pulled live from €STR so at least one
-point is real.
+mechanics are identical independent of the source input dataset - real or synthetic quotes. 
+The O/N pillar is pulled live from €STR so at least one point is real.
 
-Values in ECB `YC` are **percent** and **continuously compounded**. Getting either of those
+Values in ECB `YC` are **percent** and **continuously compounded**. Getting units
 wrong leads to catastrophic bugs, so `ecb.py` converts to decimals at
 the boundary and everything inside the package is in decimals.
 
