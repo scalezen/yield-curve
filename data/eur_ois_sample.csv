@@ -1,0 +1,35 @@
+# EUR ESTR OIS par rates -- STATIC SAMPLE DATA, not a live quote set.
+#
+# Live OIS quotes are not freely available (Bloomberg/Refinitiv/ICAP own them).
+# These numbers are a plausible mid-2026 EUR curve, anchored on the published
+# ESTR fixing of ~1.93% and shaped like a normal post-easing-cycle curve:
+# flat/slightly inverted at the very front, rising through 15Y, drifting lower
+# beyond 20Y as convexity and pension demand bid the long end.
+#
+# The bootstrap mechanics do not care whether these are real. Swap this file for
+# a broker run or a Refinitiv pull and everything downstream is unchanged.
+#
+# Convention: EUR ESTR OIS, annual fixed vs compounded ESTR, ACT/360 both legs,
+# T+2 spot, modified following.
+tenor,rate_pct
+1W,1.930
+1M,1.928
+3M,1.925
+6M,1.940
+9M,1.970
+1Y,2.005
+18M,2.090
+2Y,2.170
+3Y,2.290
+4Y,2.375
+5Y,2.440
+6Y,2.495
+7Y,2.540
+8Y,2.578
+9Y,2.610
+10Y,2.638
+12Y,2.680
+15Y,2.712
+20Y,2.700
+25Y,2.655
+30Y,2.605
