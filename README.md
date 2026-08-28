@@ -9,7 +9,7 @@ par rates with no model at all. Both routes end at the same three objects —
 discount factors, zero rates, instantaneous forwards — which is what makes them
 worth building side by side.
 
-Free data only. No Bloomberg, no API key.
+**Stage 2** — bootstrap a €STR OIS discount curve from swap par rates. No model or fitting: pure sequential arithmetic.
 
 ---
 
@@ -84,8 +84,8 @@ tests/
 
 ## About the data
 
-**ECB Data Portal** (`data-api.ecb.europa.eu`) is a public SDMX API. No key, no
-registration, no rate limit worth worrying about. Two datasets matter here:
+**ECB Data Portal** (`data-api.ecb.europa.eu`) is a public SDMX API. No key, no registration and
+no rate limit. Two datasets matter here:
 
 - `YC` — euro area yield curves. The ECB fits Svensson daily to AAA-rated euro area
   government bonds and publishes both the *outputs* (spot rates `SR_1Y`, par yields
@@ -94,38 +94,17 @@ registration, no rate limit worth worrying about. Two datasets matter here:
 - `EST` — €STR, the euro short-term rate. The overnight anchor of the OIS curve.
 
 Series keys look like `YC.B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y`. Decoded:
-`B` = business daily, `U2` = euro area, `4F` = ECB as provider,
-`G_N_A` = government / nominal / AAA-only (`G_N_C` is all issuers),
-`SV_C_YM` = Svensson, continuously compounded, fitted by yield-error minimisation,
-`SR_10Y` = 10-year spot rate.
+`B`=business daily, `U2`=euro area, `4F`=ECB as provider, `G_N_A`=government/nominal/AAA-only
+(`G_N_C` is all issuers), `SV_C_YM`=Svensson, continuously compounded, fitted by yield-error
+minimisation, `SR_10Y`=10-year spot rate.
 
-Values in `YC` are **percent** and **continuously compounded**. Getting either
-wrong produces bugs that look like modelling errors and aren't, so `ecb.py`
-converts at the boundary and everything inside the package is in decimals.
+**OIS quotes** are not free. Live EUR OIS par rates are available from
+Bloomberg/Refinitiv/ICAP. So `data/eur_ois_sample.csv` is a static, plausible EUR OIS curve
+bundled with the repo — it makes Stage 2 fully reproducible offline, and the bootstrap
+mechanics are identical independent of the source input dataset - real or synthetic quotes. 
+The O/N pillar is pulled live from €STR so at least one point is real.
 
-**OIS quotes are the one thing that is genuinely not free** — live EUR OIS par
-rates sit behind Bloomberg / Refinitiv / ICAP. `data/eur_ois_sample.csv` is
-therefore a static, plausible EUR curve bundled with the repo, so Stage 2 is fully
-reproducible offline. The bootstrap mechanics are identical whatever numbers you
-feed it; replace that file with real quotes and everything downstream still works.
-The overnight pillar is pulled live from €STR, so at least one point is real.
+Values in ECB `YC` are **percent** and **continuously compounded**. Getting units
+wrong leads to catastrophic bugs, so `ecb.py` converts to decimals at
+the boundary and everything inside the package is in decimals.
 
-The test suite never touches the network — `requests.get` is monkeypatched in
-`tests/test_ecb.py`, which is why CI can run the whole thing offline.
-
-## Known gaps
-
-- **`tests/test_nss.py::test_long_end_tends_to_beta0` fails.** Real failure, not
-  flake: at T = 500 the Svensson spot is 1.28e-4 below β₀ against a tolerance of
-  1e-4. The cause is worth stating, because it is the interesting asymmetry in the
-  functional form — the level term `g(x) = (1 − e⁻ˣ)/x` decays **algebraically**,
-  as O(τ/T), so the *spot* creeps towards β₀; the forward's hump terms decay
-  exponentially and hit β₀ to machine precision by T = 500. Fix is `T = 5000` or
-  `abs = 2e-4`, once, with a comment.
-- **No credit or collateral dimension.** One curve, one discounting basis. No
-  multi-curve, no cross-currency basis, no CSA discounting.
-- **Interpolation is log-linear on discount factors only.** That is a deliberate
-  starting point (piecewise-constant forwards, easy to reason about), but the
-  choice of interpolator is a modelling decision the repo currently hides.
-- **No sensitivities.** Bucketed deltas against the input par rates are the
-  natural next thing a curve is actually used for.
