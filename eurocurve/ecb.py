@@ -186,10 +186,3 @@ def fetch_estr(date: str | dt.date | None = None) -> tuple[dt.date, float]:
     row = df.sort_values("TIME_PERIOD").iloc[-1]
     return row["TIME_PERIOD"].date(), float(row["OBS_VALUE"]) / 100.0
 
-
-
-if __name__ == "__main__":
-    # runner to see if functions work
-
-    result = fetch_history()
-    print(result)
