@@ -6,6 +6,7 @@ from eurocurve.curve import DiscountCurve
 TIMES = np.array([0.5, 1.0, 2.0, 5.0, 10.0, 30.0])
 ZEROS = np.array([0.019, 0.020, 0.022, 0.024, 0.026, 0.027])
 
+
 @pytest.fixture
 def curve():
     return DiscountCurve.from_zero_rates(TIMES, ZEROS)
@@ -35,7 +36,9 @@ def test_compounding_conversions_agree(curve):
 def test_log_linear_means_piecewise_constant_forwards(curve):
     """This is the defining property of log-linear interpolation, and the reason
     to prefer it. Between two pillars the instantaneous forward is flat."""
-    inside = np.array([2.5, 3.0, 3.5, 4.0, 4.5])  # strictly between the 2y and 5y pillars
+    inside = np.array(
+        [2.5, 3.0, 3.5, 4.0, 4.5]
+    )  # strictly between the 2y and 5y pillars
     f = curve.inst_forward(inside)
     assert np.ptp(f) < 1e-8
 
@@ -52,7 +55,9 @@ def test_forward_composition(curve):
     """DF(0,t2) = DF(0,t1) * DF(t1,t2). No arbitrage, expressed as arithmetic."""
     t1, t2 = 2.0, 5.0
     f = curve.forward(t1, t2, simple=False)
-    assert curve.df(t1) * np.exp(-f * (t2 - t1)) == pytest.approx(curve.df(t2), rel=1e-12)
+    assert curve.df(t1) * np.exp(-f * (t2 - t1)) == pytest.approx(
+        curve.df(t2), rel=1e-12
+    )
 
 
 def test_simple_and_continuous_forwards_are_consistent(curve):

@@ -32,7 +32,7 @@ produces, never the zero curve. Every scheme looks fine on the zero curve.
 from __future__ import annotations
 
 import datetime as dt
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -46,7 +46,9 @@ class DiscountCurve:
     dfs   : discount factors at those times
     """
 
-    def __init__(self, times: Sequence[float], dfs: Sequence[float], as_of: dt.date | None = None):
+    def __init__(
+        self, times: Sequence[float], dfs: Sequence[float], as_of: dt.date | None = None
+    ):
         t = np.asarray(times, dtype=float)
         d = np.asarray(dfs, dtype=float)
         if t.shape != d.shape:
@@ -106,7 +108,9 @@ class DiscountCurve:
         tau = t2 - t1
         if np.any(tau <= 0):
             raise ValueError("t2 must exceed t1")
-        ratio = np.asarray(self.df(t1), dtype=float) / np.asarray(self.df(t2), dtype=float)
+        ratio = np.asarray(self.df(t1), dtype=float) / np.asarray(
+            self.df(t2), dtype=float
+        )
         out = (ratio - 1.0) / tau if simple else np.log(ratio) / tau
         return out if np.ndim(ratio) else float(out)
 
@@ -147,7 +151,9 @@ class DiscountCurve:
         from .nss import nss_discount
 
         if times is None:
-            times = np.concatenate([np.arange(1, 12) / 12.0, np.arange(1.0, 30.25, 0.25)])
+            times = np.concatenate(
+                [np.arange(1, 12) / 12.0, np.arange(1.0, 30.25, 0.25)]
+            )
         t = np.asarray(times, dtype=float)
         return cls(t, np.asarray(nss_discount(t, params), dtype=float), as_of=as_of)
 

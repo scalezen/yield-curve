@@ -21,8 +21,12 @@ def test_act360_vs_act365():
 
 
 def test_thirty_360_ignores_month_length():
-    assert year_fraction(dt.date(2026, 1, 31), dt.date(2026, 2, 28), "30/360") == pytest.approx(28/360)
-    assert year_fraction(dt.date(2026, 1, 15), dt.date(2026, 7, 15), "30/360") == pytest.approx(0.5)
+    assert year_fraction(
+        dt.date(2026, 1, 31), dt.date(2026, 2, 28), "30/360"
+    ) == pytest.approx(28 / 360)
+    assert year_fraction(
+        dt.date(2026, 1, 15), dt.date(2026, 7, 15), "30/360"
+    ) == pytest.approx(0.5)
 
 
 def test_backwards_dates_rejected():
@@ -32,7 +36,14 @@ def test_backwards_dates_rejected():
 
 @pytest.mark.parametrize(
     "tenor,years",
-    [("3M", 0.25), ("6M", 0.5), ("18M", 1.5), ("1Y", 1.0), ("30Y", 30.0), ("1W", 7 / 365)],
+    [
+        ("3M", 0.25),
+        ("6M", 0.5),
+        ("18M", 1.5),
+        ("1Y", 1.0),
+        ("30Y", 30.0),
+        ("1W", 7 / 365),
+    ],
 )
 def test_parse_tenor(tenor, years):
     assert parse_tenor(tenor) == pytest.approx(years)
@@ -82,5 +93,3 @@ def test_accruals_sum_to_total_period():
     sched = annual_schedule(s, "10Y")
     a = accruals(s, sched)
     assert sum(a) == pytest.approx(year_fraction(s, sched[-1], "ACT/360"))
-
-

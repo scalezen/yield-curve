@@ -62,8 +62,8 @@ If you ever need annual compounding: y_ann = exp(y_cont) - 1.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from typing import Sequence
+from collections.abc import Sequence
+from dataclasses import asdict, dataclass
 
 import numpy as np
 from scipy.optimize import least_squares
@@ -89,7 +89,7 @@ class NSSParams:
         )
 
     @classmethod
-    def from_array(cls, x: Sequence[float]) -> "NSSParams":
+    def from_array(cls, x: Sequence[float]) -> NSSParams:
         return cls(*[float(v) for v in x])
 
     @property
@@ -107,10 +107,8 @@ class NSSParams:
 
     def __repr__(self) -> str:  # pragma: no cover - cosmetic
         return (
-            "NSSParams(beta0={:.4%}, beta1={:.4%}, beta2={:.4%}, beta3={:.4%}, "
-            "tau1={:.3f}y, tau2={:.3f}y)".format(
-                self.beta0, self.beta1, self.beta2, self.beta3, self.tau1, self.tau2
-            )
+            f"NSSParams(beta0={self.beta0:.4%}, beta1={self.beta1:.4%}, beta2={self.beta2:.4%}, beta3={self.beta3:.4%}, "
+            f"tau1={self.tau1:.3f}y, tau2={self.tau2:.3f}y)"
         )
 
 
@@ -142,7 +140,12 @@ def nss_forward(tau, p: NSSParams | Sequence[float]) -> np.ndarray:
     p = p if isinstance(p, NSSParams) else NSSParams.from_array(p)
     t = np.asarray(tau, dtype=float)
     e1, e2 = np.exp(-t / p.tau1), np.exp(-t / p.tau2)
-    return p.beta0 + p.beta1 * e1 + p.beta2 * (t / p.tau1) * e1 + p.beta3 * (t / p.tau2) * e2
+    return (
+        p.beta0
+        + p.beta1 * e1
+        + p.beta2 * (t / p.tau1) * e1
+        + p.beta3 * (t / p.tau2) * e2
+    )
 
 
 def nss_discount(tau, p: NSSParams | Sequence[float]) -> np.ndarray:
@@ -168,7 +171,7 @@ def nss_par_yield(tau, p: NSSParams | Sequence[float], freq: int = 1) -> np.ndar
     taus = np.atleast_1d(np.asarray(tau, dtype=float))
     out = np.empty_like(taus)
     for i, T in enumerate(taus):
-        n = max(int(round(T * freq)), 1)
+        n = max(round(T * freq), 1)
         times = np.arange(1, n + 1) / freq
         dfs = nss_discount(times, p)
         out[i] = freq * (1.0 - dfs[-1]) / dfs.sum()
@@ -178,6 +181,7 @@ def nss_par_yield(tau, p: NSSParams | Sequence[float], freq: int = 1) -> np.ndar
 # --------------------------------------------------------------------------- #
 # Fitting
 # --------------------------------------------------------------------------- #
+
 
 def _residuals(x, maturities, observed, weights):
     # Penalise parameter sets that would make the curve degenerate. least_squares
@@ -232,18 +236,27 @@ def fit_nss(
     b0_0 = float(y[-1])
     b1_0 = float(y[0] - y[-1])
 
-    tau_grid = [(0.5, 3.0), (1.0, 5.0), (2.0, 8.0), (1.5, 12.0), (3.0, 20.0), (0.8, 6.0)]
+    tau_grid = [
+        (0.5, 3.0),
+        (1.0, 5.0),
+        (2.0, 8.0),
+        (1.5, 12.0),
+        (3.0, 20.0),
+        (0.8, 6.0),
+    ]
     starts = [np.array([b0_0, b1_0, 0.0, 0.0, a, b]) for a, b in tau_grid]
     while len(starts) < n_starts:
         starts.append(
-            np.array([
-                b0_0 + rng.normal(0, 0.005),
-                b1_0 + rng.normal(0, 0.005),
-                rng.normal(0, 0.02),
-                rng.normal(0, 0.02),
-                float(rng.uniform(0.2, 5.0)),
-                float(rng.uniform(3.0, 25.0)),
-            ])
+            np.array(
+                [
+                    b0_0 + rng.normal(0, 0.005),
+                    b1_0 + rng.normal(0, 0.005),
+                    rng.normal(0, 0.02),
+                    rng.normal(0, 0.02),
+                    float(rng.uniform(0.2, 5.0)),
+                    float(rng.uniform(3.0, 25.0)),
+                ]
+            )
         )
 
     lo = np.array([-0.20, -0.50, -0.50, -0.50, 0.05, 0.05])
@@ -254,8 +267,14 @@ def fit_nss(
         x0 = np.clip(x0, lo + 1e-6, hi - 1e-6)
         try:
             res = least_squares(
-                _residuals, x0, args=(t, y, w), bounds=(lo, hi),
-                method="trf", max_nfev=8000, xtol=1e-14, ftol=1e-14,
+                _residuals,
+                x0,
+                args=(t, y, w),
+                bounds=(lo, hi),
+                method="trf",
+                max_nfev=8000,
+                xtol=1e-14,
+                ftol=1e-14,
             )
         except Exception:  # pragma: no cover - solver blow-ups are rare
             continue
@@ -274,7 +293,7 @@ def fit_nss(
     params = NSSParams.from_array(x)
     resid = nss_spot(t, params) - y
     info = {
-        "rmse": float(np.sqrt(np.mean(resid ** 2))),
+        "rmse": float(np.sqrt(np.mean(resid**2))),
         "max_abs_error": float(np.max(np.abs(resid))),
         "residuals": resid,
         "n_starts": len(starts),
