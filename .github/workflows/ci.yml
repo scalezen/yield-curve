@@ -21,20 +21,21 @@ jobs:
         shell: bash -el {0}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Cache conda packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/conda_pkgs_dir
           key: conda-${{ runner.os }}-${{ hashFiles('environment.yaml') }}
 
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           environment-file: environment.yaml
           activate-environment: yield_curve_env
           miniforge-version: latest
           use-mamba: true
+          conda-remove-defaults: true
 
       - name: Run tests
         # The ECB client is monkeypatched in tests -- nothing here hits the network.
