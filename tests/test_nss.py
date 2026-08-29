@@ -29,7 +29,14 @@ def test_forward_at_zero_equals_spot_at_zero():
 
 
 def test_long_end_tends_to_beta0():
-    assert nss_spot(500.0, P) == pytest.approx(P.beta0, abs=1e-4)
+    """The forward rate converges to beta0 exponentially fast (in tau1, tau2), so
+    tau=500 already nails it to machine precision. The spot rate is the AVERAGE
+    of the forward from 0 to tau, and the beta3 hump's tail only decays like
+    tau2/tau -- a slow O(1/tau) harmonic tail, not exponential. At tau=500 that
+    residual is still ~1.3e-4, wider than the tolerance below; tau=50_000 gives
+    it three more orders of magnitude of room.
+    """
+    assert nss_spot(50_000.0, P) == pytest.approx(P.beta0, abs=1e-4)
     assert nss_forward(500.0, P) == pytest.approx(P.beta0, abs=1e-6)
 
 
