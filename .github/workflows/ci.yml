@@ -40,3 +40,34 @@ jobs:
       - name: Run tests
         # The ECB client is monkeypatched in tests -- nothing here hits the network.
         run: pytest -q --durations=10
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Cache conda packages
+        uses: actions/cache@v6
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-${{ runner.os }}-${{ hashFiles('environment.yaml') }}
+
+      - uses: conda-incubator/setup-miniconda@v4
+        with:
+          environment-file: environment.yaml
+          activate-environment: yield_curve_env
+          miniforge-version: latest
+          use-mamba: true
+          conda-remove-defaults: true
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Check formatting (black)
+        run: black --check .

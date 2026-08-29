@@ -1,0 +1,12 @@
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+ignore = [
+    "BLE001",  # blind `except Exception` -- used deliberately for resilient fallbacks
+    "DTZ011",  # naive `date.today()` -- valuation dates are calendar dates, not timestamps
+    "S112",    # try/except/continue -- deliberate multi-start optimizer retry in nss.py
+]
+
+[tool.black]
+line-length = 88
