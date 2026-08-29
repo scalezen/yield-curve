@@ -11,4 +11,6 @@ dependencies:
   - pytest>=7.4
   - jupyterlab>=4.0
   - ipykernel>=6.25
+  - ruff>=0.6
+  - black>=24.0
 
