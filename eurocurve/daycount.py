@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 # Weekday of the "modified following" business day convention. We deliberately do
 # NOT model the TARGET2 holiday calendar here -- for a toy curve the error is a day
@@ -39,9 +39,7 @@ def year_fraction(start: dt.date, end: dt.date, convention: str = "ACT/360") -> 
         d1 = min(start.day, 30)
         d2 = min(end.day, 30) if d1 == 30 else end.day
         return (
-            360 * (end.year - start.year)
-            + 30 * (end.month - start.month)
-            + (d2 - d1)
+            360 * (end.year - start.year) + 30 * (end.month - start.month) + (d2 - d1)
         ) / 360.0
     if conv == "ACT/ACT":
         # Good enough for a toy: actual days over the average calendar year.
@@ -90,7 +88,9 @@ def _add_months(d: dt.date, n: int) -> dt.date:
     total = d.month - 1 + n
     year = d.year + total // 12
     month = total % 12 + 1
-    last = [31, 29 if _leap(year) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1]
+    last = [31, 29 if _leap(year) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][
+        month - 1
+    ]
     return dt.date(year, month, min(d.day, last))
 
 
@@ -157,7 +157,9 @@ def _unrolled_end(start: dt.date, tenor: str) -> dt.date:
     return _add_months(start, 12 * n)
 
 
-def accruals(start: dt.date, dates: Iterable[dt.date], convention: str = "ACT/360") -> list[float]:
+def accruals(
+    start: dt.date, dates: Iterable[dt.date], convention: str = "ACT/360"
+) -> list[float]:
     """Year fractions for consecutive periods running from `start` through `dates`."""
     out, prev = [], start
     for d in dates:

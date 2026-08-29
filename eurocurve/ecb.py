@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import datetime as dt
 import io
-from typing import Iterable, Sequence
+from collections.abc import Sequence
 
 import pandas as pd
 import requests
@@ -44,9 +44,24 @@ BASE = "https://data-api.ecb.europa.eu/service/data"
 
 #: The maturity ladder the ECB publishes. 3M-30Y, in years.
 DEFAULT_TENORS: tuple[str, ...] = (
-    "3M", "6M", "9M",
-    "1Y", "2Y", "3Y", "4Y", "5Y", "6Y", "7Y", "8Y", "9Y", "10Y",
-    "12Y", "15Y", "20Y", "25Y", "30Y",
+    "3M",
+    "6M",
+    "9M",
+    "1Y",
+    "2Y",
+    "3Y",
+    "4Y",
+    "5Y",
+    "6Y",
+    "7Y",
+    "8Y",
+    "9Y",
+    "10Y",
+    "12Y",
+    "15Y",
+    "20Y",
+    "25Y",
+    "30Y",
 )
 
 #: `G_N_A` = AAA-rated issuers only (the "risk-free" euro curve).
@@ -114,7 +129,9 @@ def fetch_curve(
     df["tenor"] = df["DATA_TYPE_FM"].str.split("_").str[1]
     df["maturity"] = df["tenor"].map(parse_tenor)
     df["rate"] = df["OBS_VALUE"] / 100.0
-    out = df[["tenor", "maturity", "rate"]].sort_values("maturity").reset_index(drop=True)
+    out = (
+        df[["tenor", "maturity", "rate"]].sort_values("maturity").reset_index(drop=True)
+    )
     out.attrs["as_of"] = asof.date()
     out.attrs["kind"] = kind
     out.attrs["rating"] = rating
@@ -140,7 +157,10 @@ def fetch_ecb_svensson_params(
             params = {"lastNObservations": 1}
         else:
             d = pd.to_datetime(date).date()
-            params = {"startPeriod": str(d - dt.timedelta(days=14)), "endPeriod": str(d)}
+            params = {
+                "startPeriod": str(d - dt.timedelta(days=14)),
+                "endPeriod": str(d),
+            }
         f = _get("YC", key, params)
         f = f[f["TIME_PERIOD"] == f["TIME_PERIOD"].max()]
         frames.append(f[["DATA_TYPE_FM", "TIME_PERIOD", "OBS_VALUE"]])
@@ -158,6 +178,7 @@ def fetch_ecb_svensson_params(
         "tau2": raw["TAU2"],
     }
 
+
 def fetch_history(
     tenor: str = "10Y",
     start: str = "2015-01-01",
@@ -167,7 +188,9 @@ def fetch_history(
     """Time series of one point on the curve. Handy for 'is today weird?' checks."""
     key = _series_key(tenor, kind, rating)
     df = _get("YC", key, {"startPeriod": start})
-    s = pd.Series(df["OBS_VALUE"].values / 100.0, index=df["TIME_PERIOD"], name=f"{kind}_{tenor}")
+    s = pd.Series(
+        df["OBS_VALUE"].values / 100.0, index=df["TIME_PERIOD"], name=f"{kind}_{tenor}"
+    )
     return s.sort_index()
 
 
@@ -185,4 +208,3 @@ def fetch_estr(date: str | dt.date | None = None) -> tuple[dt.date, float]:
     df = _get("EST", "B.EU000A2X2A25.WT", params)
     row = df.sort_values("TIME_PERIOD").iloc[-1]
     return row["TIME_PERIOD"].date(), float(row["OBS_VALUE"]) / 100.0
-

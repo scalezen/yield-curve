@@ -67,14 +67,14 @@ when your inputs are noisy and you *want* the noise smoothed away.
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Sequence
 
 import numpy as np
 from scipy.optimize import brentq
 
 from .curve import DiscountCurve
-from .daycount import accruals, add_tenor, annual_schedule, parse_tenor, year_fraction
+from .daycount import accruals, add_tenor, annual_schedule, year_fraction
 
 #: Time axis convention for the curve itself. Accruals use ACT/360 (the contract's
 #: convention); the curve's t-coordinate uses ACT/365F. Mixing these up is the second
@@ -114,7 +114,9 @@ class OISSwap:
 
     def annuity(self, curve: DiscountCurve) -> float:
         """sum_i alpha_i * DF(t_i) -- the PV of receiving 1.0 of fixed rate."""
-        return float(np.sum(self.alphas * np.asarray(curve.df(self.times), dtype=float)))
+        return float(
+            np.sum(self.alphas * np.asarray(curve.df(self.times), dtype=float))
+        )
 
     def pv(self, curve: DiscountCurve, notional: float = 1.0) -> float:
         """PV to the FIXED RECEIVER. Should be ~0 for a swap quoted at par."""
