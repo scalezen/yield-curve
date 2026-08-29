@@ -33,6 +33,7 @@ def curve(swaps):
 # The test that matters
 # --------------------------------------------------------------------------- #
 
+
 def test_bootstrap_reprices_every_input_exactly(swaps, curve):
     """A bootstrapped curve returns its own inputs. Not approximately -- to
     machine precision, because each pillar was solved to make it so.
@@ -46,12 +47,15 @@ def test_bootstrap_reprices_every_input_exactly(swaps, curve):
 
 def test_par_swaps_have_zero_pv(swaps, curve):
     for s in swaps:
-        assert s.pv(curve, notional=1e8) == pytest.approx(0.0, abs=1e-3)  # <0.1 cent on EUR100m
+        assert s.pv(curve, notional=1e8) == pytest.approx(
+            0.0, abs=1e-3
+        )  # <0.1 cent on EUR100m
 
 
 # --------------------------------------------------------------------------- #
 # Checking the algebra by hand
 # --------------------------------------------------------------------------- #
+
 
 def test_one_year_matches_the_closed_form():
     """For a single-payment OIS the bootstrap has an exact solution:
@@ -85,7 +89,9 @@ def test_float_leg_telescopes_to_one_minus_df(swaps, curve):
     t = np.concatenate([[0.0], s.times])
     dfs = np.asarray(curve.df(t), dtype=float)
     period_pvs = dfs[:-1] - dfs[1:]  # DF(t_{i-1}) - DF(t_i) per period
-    assert period_pvs.sum() == pytest.approx(1.0 - float(curve.df(s.maturity)), rel=1e-12)
+    assert period_pvs.sum() == pytest.approx(
+        1.0 - float(curve.df(s.maturity)), rel=1e-12
+    )
 
 
 def test_flat_curve_gives_recognisable_rates():
@@ -100,6 +106,7 @@ def test_flat_curve_gives_recognisable_rates():
 # --------------------------------------------------------------------------- #
 # Structural properties
 # --------------------------------------------------------------------------- #
+
 
 def test_discount_factors_strictly_decreasing(curve):
     assert np.all(np.diff(curve.dfs) < 0)
@@ -166,7 +173,9 @@ def test_overnight_anchor_shows_up_in_the_short_end(swaps):
     without = bootstrap_ois(swaps)
     assert abs(with_on.df(1 / 365) - without.df(1 / 365)) > 1e-6
     for s in swaps:
-        assert with_on.df(s.maturity) == pytest.approx(without.df(s.maturity), rel=1e-12)
+        assert with_on.df(s.maturity) == pytest.approx(
+            without.df(s.maturity), rel=1e-12
+        )
 
 
 def test_sample_data_loads_and_is_sane(swaps):
