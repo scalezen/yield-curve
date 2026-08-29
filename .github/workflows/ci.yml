@@ -16,18 +16,25 @@ jobs:
     name: pytest
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash -el {0}
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Cache conda packages
+        uses: actions/cache@v4
         with:
-          python-version: "3.11"
-          cache: pip
-          cache-dependency-path: requirements.txt
+          path: ~/conda_pkgs_dir
+          key: conda-${{ runner.os }}-${{ hashFiles('environment.yaml') }}
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment.yaml
+          activate-environment: yield_curve_env
+          miniforge-version: latest
+          use-mamba: true
 
       - name: Run tests
         # The ECB client is monkeypatched in tests -- nothing here hits the network.
