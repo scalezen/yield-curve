@@ -73,7 +73,9 @@ jobs:
         run: black --check .
 
       - name: Type check (mypy)
-        # Scoped to curve.py only -- the rest of the package isn't annotated yet.
-        # follow-imports=silent uses type info from what curve.py imports without
-        # demanding those untyped modules pass their own checks.
-        run: mypy eurocurve/curve.py --follow-imports=silent --ignore-missing-imports
+        # --ignore-missing-imports: pandas/scipy ship no type stubs, so untyped
+        # imports fall back to Any instead of erroring on every "stubs not
+        # installed" hit. mypy's default (non-strict) mode doesn't require full
+        # annotations, so files with partial/no typing pass silently rather than
+        # failing -- this gates only what IS annotated, e.g. curve.py's overloads.
+        run: mypy eurocurve/ --ignore-missing-imports
