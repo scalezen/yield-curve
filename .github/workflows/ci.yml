@@ -41,8 +41,8 @@ jobs:
         # The ECB client is monkeypatched in tests -- nothing here hits the network.
         run: pytest -q --durations=10
 
-  lint:
-    name: lint
+  code-quality:
+    name: code quality
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -71,3 +71,9 @@ jobs:
 
       - name: Check formatting (black)
         run: black --check .
+
+      - name: Type check (mypy)
+        # Scoped to curve.py only -- the rest of the package isn't annotated yet.
+        # follow-imports=silent uses type info from what curve.py imports without
+        # demanding those untyped modules pass their own checks.
+        run: mypy eurocurve/curve.py --follow-imports=silent --ignore-missing-imports

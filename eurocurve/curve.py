@@ -33,8 +33,18 @@ from __future__ import annotations
 
 import datetime as dt
 from collections.abc import Sequence
+from typing import TYPE_CHECKING, Literal, overload
 
 import numpy as np
+import numpy.typing as npt
+
+if TYPE_CHECKING:
+    import pandas as pd
+
+    from .nss import NSSParams
+
+ZeroCompounding = Literal["continuous", "annual", "simple"]
+RateCompounding = Literal["continuous", "annual"]
 
 
 class DiscountCurve:
@@ -47,7 +57,7 @@ class DiscountCurve:
     """
 
     def __init__(
-        self, times: Sequence[float], dfs: Sequence[float], as_of: dt.date | None = None
+        self, times: npt.ArrayLike, dfs: npt.ArrayLike, as_of: dt.date | None = None
     ):
         t = np.asarray(times, dtype=float)
         d = np.asarray(dfs, dtype=float)
@@ -68,6 +78,10 @@ class DiscountCurve:
         self.as_of = as_of
 
     # -- core ---------------------------------------------------------------
+    @overload
+    def df(self, t: float) -> float: ...
+    @overload
+    def df(self, t: npt.ArrayLike) -> npt.NDArray[np.float64]: ...
     def df(self, t):
         """Discount factor. Log-linear between pillars; flat-forward extrapolation
         beyond the last pillar (the only extrapolation that does not eventually
@@ -82,7 +96,13 @@ class DiscountCurve:
         out = np.exp(ld)
         return out if np.ndim(t) else float(out)
 
-    def zero(self, t, compounding: str = "continuous"):
+    @overload
+    def zero(self, t: float, compounding: ZeroCompounding = "continuous") -> float: ...
+    @overload
+    def zero(
+        self, t: npt.ArrayLike, compounding: ZeroCompounding = "continuous"
+    ) -> npt.NDArray[np.float64]: ...
+    def zero(self, t, compounding: ZeroCompounding = "continuous"):
         """Zero rate to time t, as a decimal."""
         tt = np.asarray(t, dtype=float)
         safe = np.where(tt <= 1e-12, 1e-12, tt)
@@ -97,6 +117,12 @@ class DiscountCurve:
             raise ValueError(f"unknown compounding {compounding!r}")
         return out if np.ndim(t) else float(out)
 
+    @overload
+    def forward(self, t1: float, t2: float, simple: bool = True) -> float: ...
+    @overload
+    def forward(
+        self, t1: npt.ArrayLike, t2: npt.ArrayLike, simple: bool = True
+    ) -> npt.NDArray[np.float64]: ...
     def forward(self, t1, t2, simple: bool = True):
         """Forward rate between two future times.
 
@@ -114,6 +140,12 @@ class DiscountCurve:
         out = (ratio - 1.0) / tau if simple else np.log(ratio) / tau
         return out if np.ndim(ratio) else float(out)
 
+    @overload
+    def inst_forward(self, t: float, h: float = 1e-4) -> float: ...
+    @overload
+    def inst_forward(
+        self, t: npt.ArrayLike, h: float = 1e-4
+    ) -> npt.NDArray[np.float64]: ...
     def inst_forward(self, t, h: float = 1e-4):
         """Instantaneous forward f(t) = -d ln DF / dt, by central difference.
 
@@ -129,7 +161,13 @@ class DiscountCurve:
 
     # -- constructors -------------------------------------------------------
     @classmethod
-    def from_zero_rates(cls, times, zeros, compounding: str = "continuous", as_of=None):
+    def from_zero_rates(
+        cls,
+        times: npt.ArrayLike,
+        zeros: npt.ArrayLike,
+        compounding: RateCompounding = "continuous",
+        as_of: dt.date | None = None,
+    ) -> DiscountCurve:
         t = np.asarray(times, dtype=float)
         z = np.asarray(zeros, dtype=float)
         if compounding == "continuous":
@@ -141,7 +179,12 @@ class DiscountCurve:
         return cls(t, d, as_of=as_of)
 
     @classmethod
-    def from_nss(cls, params, times=None, as_of=None):
+    def from_nss(
+        cls,
+        params: NSSParams | Sequence[float],
+        times: npt.ArrayLike | None = None,
+        as_of: dt.date | None = None,
+    ) -> DiscountCurve:
         """Sample a fitted NSS curve onto a pillar grid.
 
         Note this *discretises* a smooth curve, so the resulting object's forwards
@@ -158,7 +201,7 @@ class DiscountCurve:
         return cls(t, np.asarray(nss_discount(t, params), dtype=float), as_of=as_of)
 
     # -- misc ---------------------------------------------------------------
-    def to_frame(self, times=None):
+    def to_frame(self, times: npt.ArrayLike | None = None) -> pd.DataFrame:
         import pandas as pd
 
         t = self.times[1:] if times is None else np.asarray(times, dtype=float)
