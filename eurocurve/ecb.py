@@ -115,6 +115,7 @@ def fetch_curve(
     key = _series_key("+".join(tenors), kind, rating)
     # NB: SDMX lets you OR multiple codes in one dimension with '+', so this is
     # a single HTTP round trip for the whole curve rather than 18 of them.
+    params: dict[str, str | int]
     if date is None:
         params = {"lastNObservations": 1}
     else:
@@ -151,6 +152,7 @@ def fetch_ecb_svensson_params(
     """
     codes = ["BETA0", "BETA1", "BETA2", "BETA3", "TAU1", "TAU2"]
     frames = []
+    params: dict[str, str | int]
     for c in codes:
         key = f"B.U2.EUR.4F.{rating}.SV_C_YM.{c}"
         if date is None:
@@ -200,6 +202,7 @@ def fetch_estr(date: str | dt.date | None = None) -> tuple[dt.date, float]:
     Series `EST.B.EU000A2X2A25.WT` -- 'WT' is the volume-weighted trimmed mean,
     which is the published €STR fixing itself.
     """
+    params: dict[str, str | int]
     if date is None:
         params = {"lastNObservations": 1}
     else:

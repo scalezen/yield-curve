@@ -154,7 +154,9 @@ def nss_discount(tau, p: NSSParams | Sequence[float]) -> np.ndarray:
     return np.exp(-nss_spot(t, p) * t)
 
 
-def nss_par_yield(tau, p: NSSParams | Sequence[float], freq: int = 1) -> np.ndarray:
+def nss_par_yield(
+    tau, p: NSSParams | Sequence[float], freq: int = 1
+) -> np.ndarray | float:
     """Coupon that makes a bond of maturity `tau` price at par.
 
         c = (1 - DF(T)) / sum_i DF(t_i) * freq
